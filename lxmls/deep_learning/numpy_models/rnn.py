@@ -75,7 +75,7 @@ class NumpyRNN(RNN):
         nr_steps = input.shape[0]
 
         log_p_y, y, h, z_e, x = self.log_forward(input)
-        p_y = np.exp(log_p_y)
+        prob_y = np.exp(log_p_y)
 
         # Initialize gradients with zero entrances
         gradient_W_e = np.zeros(W_e.shape)
@@ -86,8 +86,17 @@ class NumpyRNN(RNN):
         # ----------
         # Solution to Exercise 1
 
-        raise NotImplementedError("Implement Exercise 1")
+        error = ( index2onehot(output, W_y.shape()[0]) - prob_y ) nr_steps
 
+
+        for m in reversed(range(nr_steps)):
+            
+            gradient_W_y += np.outer(error[m, :], h[m+1, :])
+            error[m, :] = np.dot(error[m, :], W_y) * h[m+1, :] * (1 - h[m+1, :])
+            gradient_W_x += np.outer(error[m, :], z_e[m, :])
+            gradient_W_h += np.outer(error[m, :], h[m, :])
+            gradient_W_e[x[m], :] += error[m, :]
+        
         # End of Solution to Exercise 1
         # ----------
 

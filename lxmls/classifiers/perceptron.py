@@ -5,22 +5,35 @@ import lxmls.classifiers.linear_classifier as lc
 
 class Perceptron(lc.LinearClassifier):
 
-    def __init__(self, nr_epochs=10, learning_rate=1, averaged=True):
+    def __init__(self, nr_epochs=10, learning_rate=1):
         lc.LinearClassifier.__init__(self)
         self.trained = False
         self.nr_epochs = nr_epochs
         self.learning_rate = learning_rate
-        self.averaged = averaged
         self.params_per_round = []
 
-    def train(self, x, y, seed=1):
+    def train(self, x, y, seed=1, averaged=False):
+        """
+            Train the perceptron model
+            Arguments:
+                x: is the training feature data
+                y is the output labels
+            Returns:
+                w: the learned weights of the perceptron
+        """
+        
         self.params_per_round = []
         x_orig = x[:, :]
         x = self.add_intercept_term(x)
-        nr_x, nr_f = x.shape
-        nr_c = np.unique(y).shape[0]
+        nr_x, nr_f = x.shape  # nr_x = number of examples, nr_f = number of features
+        nr_c = np.unique(y).shape[0] # nr_c = number of classes
+    
         w = np.zeros((nr_f, nr_c))
+
+        
+        # nr_epochs = number of rounds R
         for epoch_nr in range(self.nr_epochs):
+            
 
             # use seed to generate permutation
             np.random.seed(seed)
@@ -42,17 +55,24 @@ class Perceptron(lc.LinearClassifier):
                     w[:, y_hat] += -1 * self.learning_rate * x[inst:inst+1, :].transpose()
 
             self.params_per_round.append(w.copy())
+            
+
+            
             self.trained = True
             y_pred = self.test(x_orig, w)
             acc = self.evaluate(y, y_pred)
             self.trained = False
+            #print(epoch_nr, w)
             print("Rounds: %i Accuracy: %f" % (epoch_nr, acc))
         self.trained = True
+        
 
-        if self.averaged:
+        if averaged:
             new_w = 0
             for old_w in self.params_per_round:
                 new_w += old_w
-            new_w /= len(self.params_per_round)
+            new_w /= len(self.params_per_round) 
             return new_w
+        
+        
         return w

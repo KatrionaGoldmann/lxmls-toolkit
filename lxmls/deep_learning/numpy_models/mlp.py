@@ -88,14 +88,59 @@ class NumpyMLP(MLP):
         num_examples, num_clases = prob_y.shape
         num_hidden_layers = len(self.parameters) - 1
 
-        # For each layer in reverse store the backpropagated error, then compute
-        # the gradients from the errors and the layer inputs
-        errors = []
-
         # ----------
         # Solution to Exercise 2
 
-        raise NotImplementedError("Implement Exercise 2")
+        # For each layer in reverse store the backpropagated error, then compute
+        # the gradients from the errors and the layer inputs
+        errors = []
+        
+        #error_n = (prob_y - I) / num_examples
+        error_n = (prob_y - index2onehot(output, num_clases) ) / num_examples
+        errors.append(error_n)
+        
+        
+        for n in reversed(range(num_hidden_layers)):
+            
+            # dot product of the error with the weights (of the next layer)
+            error_lin = np.dot(error_n, self.parameters[n+1][0]) # flipping order for transform
+            
+            error_nonlin = (layer_inputs[n+1] * (1-layer_inputs[n+1]))
+            
+            # Backpropagate
+            error_n = error_lin * error_nonlin
+            
+            errors.append(error_n)
+        
+        # reverse the errors
+        errors = errors[::-1]
+        
+
+        # Compute gradients from errors
+        gradients = []
+        
+        # this time for each layer (not just hidden)
+        for n in range(num_hidden_layers + 1):
+
+            # Weight gradient
+            weight_gradient = np.zeros(self.parameters[n][0].shape)
+            for l in range(num_examples):
+                weight_gradient += np.outer(
+                    errors[n][l, :], # the error for a given layer and class
+                    layer_inputs[n][l, :] # the input for a given layer and class
+                )
+
+            # Bias gradient
+            bias_gradient = np.sum(errors[n], axis=0, keepdims=True)
+
+            # Store gradients
+            gradients.append([weight_gradient, bias_gradient])
+ 
+        
+
+
+
+        #raise NotImplementedError("Implement Exercise 2")
         
         # End of solution to Exercise 2
         # ----------
