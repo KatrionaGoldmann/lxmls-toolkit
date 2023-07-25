@@ -33,15 +33,10 @@ class NewGELU(nn.Module):
 
 
 class CausalSelfAttention(nn.Module):
-    """
-    A vanilla multi-head masked self-attention layer with a projection at the end.
-    It is possible to use torch.nn.MultiheadAttention here but I am including an
-    explicit implementation here to show that there is nothing too scary here.
-    """
-
+    
     def __init__(self, config):
         super().__init__()
-
+        
         # Initialize layers and parameters
         self.hidden_size = config.n_embd
         self.num_heads = config.n_head
@@ -70,8 +65,10 @@ class CausalSelfAttention(nn.Module):
 
         # Create the projections for query, key, and value tensors
         # Note: In self-attention these are all over the same tensor x
+        query = self.query_proj(x)
+        key = self.key_proj(x)
+        value = self.value_proj(x)
 
-        raise NotImplementedError("Complete Exercise 2.2.1")
 
         # End solution to Exercise 2.2.1
         # ----------
@@ -96,14 +93,15 @@ class CausalSelfAttention(nn.Module):
         # Normalize the scores by dividing by the square root of the hidden size
         # Take into account that you are using multi-head attention!
 
-        raise NotImplementedError("Complete Exercise 2.2.2")
+        attention_scores = torch.matmul(query, key.transpose(-2, -1))
 
-        # End solution to Exercise 2.2.2
-        # ----------
+        # Normalize the scores by dividing by the square root of the hidden size
+        # Take into account that you are using multi-head attention!
+        attention_scores = attention_scores / math.sqrt(self.hidden_size / self.num_heads)
 
         # Apply causal mask to restrict attention to the left in the input sequence
         mask = self.bias[:, :, :T, :T]
-        scores = scores.masked_fill(mask == 0, float('-inf'))
+        scores = attention_scores.masked_fill(mask == 0, float('-inf'))
 
         # ----------
         # Solution to Exercise 2.2.3
@@ -111,7 +109,7 @@ class CausalSelfAttention(nn.Module):
         # Apply softmax activation to get attention weights
         # Check the correct axis for the softmax function! What should be the shape of the weights?
 
-        raise NotImplementedError("Complete Exercise 2.2.3")
+        weights = F.softmax(scores, dim=-1)
 
         # End solution to Exercise 2.2.3
         # ----------
@@ -123,8 +121,8 @@ class CausalSelfAttention(nn.Module):
         # Solution to Exercise 2.2.4
 
         # Multiply attention weights with values to get attended values
-
-        raise NotImplementedError("Complete Exercise 2.2.4")
+        attended_values = torch.matmul(weights, value)
+        
 
         # End solution to Exercise 2.2.4
         # ----------
